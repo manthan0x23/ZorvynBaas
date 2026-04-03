@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
-import { db } from "./db";
 import { users, categories } from "./schema";
 import argon2 from "argon2";
+import { db } from "~/lib/db";
 
 const seedCategories = [
   { name: "Salary", type: "income" },

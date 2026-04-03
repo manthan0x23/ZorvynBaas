@@ -21,8 +21,9 @@ export function validate<T>(schema: ZodSchema<T>, source: Source = "body") {
 
       return next(new ValidationError(fields));
     }
-
-    req[source] = result.data;
+    
+    req.validated ??= {};
+    req.validated[source] = result.data;
 
     next();
   };

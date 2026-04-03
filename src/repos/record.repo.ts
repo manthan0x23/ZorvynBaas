@@ -8,11 +8,12 @@ export type RecordStatus = "pending" | "posted" | "cancelled";
 export type RecordType = "income" | "expense" | "special";
 
 type CreateRecordInput = {
-  category: string;
+  categoryId: string;
   amount: string;
   notes?: string;
   occurredAt: Date;
   status?: RecordStatus;
+  type?: RecordType;
 };
 
 type UpdateRecordInput = Partial<{
@@ -35,13 +36,10 @@ const notDeleted = isNull(financialRecords.deletedAt);
 
 export const recordRepo = {
   async create(input: CreateRecordInput) {
-    const category = await categoryRepo.ensure(input.category);
-
     const [record] = await db
       .insert(financialRecords)
       .values({
         ...input,
-        categoryId: category.id,
       })
       .returning();
 
@@ -221,5 +219,52 @@ export const recordRepo = {
         categories.type,
       )
       .orderBy(sql`extract(month from ${financialRecords.occurredAt})`);
+  },
+
+  async weeklyTotals(year: number) {
+    return db
+      .select({
+        week: sql<number>`extract(isoyear from ${financialRecords.occurredAt})`, // for filtering
+        isoWeek: sql<number>`extract(week from ${financialRecords.occurredAt})`,
+        type: categories.type,
+        total: sql<string>`sum(${financialRecords.amount})`,
+      })
+      .from(financialRecords)
+      .innerJoin(categories, eq(financialRecords.categoryId, categories.id))
+      .where(
+        and(
+          notDeleted,
+          eq(financialRecords.status, "posted"),
+          // use isoyear, not year
+          sql`extract(isoyear from ${financialRecords.occurredAt}) = ${year}`,
+        ),
+      )
+      .groupBy(
+        sql`extract(isoyear from ${financialRecords.occurredAt})`,
+        sql`extract(week from ${financialRecords.occurredAt})`,
+        categories.type,
+      )
+      .orderBy(sql`extract(week from ${financialRecords.occurredAt})`);
+  },
+
+  async sumByCategoryForPeriod(from: Date, to: Date) {
+    return db
+      .select({
+        categoryId: categories.id,
+        categoryName: categories.name,
+        type: categories.type,
+        total: sql<string>`sum(${financialRecords.amount})`,
+      })
+      .from(financialRecords)
+      .innerJoin(categories, eq(financialRecords.categoryId, categories.id))
+      .where(
+        and(
+          notDeleted,
+          eq(financialRecords.status, "posted"),
+          gte(financialRecords.occurredAt, from),
+          lte(financialRecords.occurredAt, to),
+        ),
+      )
+      .groupBy(categories.id, categories.name, categories.type);
   },
 };

@@ -42,14 +42,14 @@ export const categoryRepo = {
     return category;
   },
 
-  async ensure(name: string) {
+  async ensure(name: string, type?: CreateCategoryInput["type"]) {
     const existing = await this.findByName(name);
 
     if (existing) return existing;
 
     return this.create({
       name,
-      type: "special",
+      type: type ?? "special",
     });
   },
 };

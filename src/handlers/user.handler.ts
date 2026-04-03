@@ -5,7 +5,7 @@ import { sessionService } from "../services/session.service";
 
 export const userHandler = {
   register: asyncHandler(async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+    const { username, password } = req.validated.body;
 
     console.log(username, password);
 
@@ -18,7 +18,7 @@ export const userHandler = {
   }),
 
   login: asyncHandler(async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+    const { username, password } = req.validated.body;
     const { userId } = await userService.login(username, password);
 
     const sessionId = await sessionService.create(userId);
@@ -48,26 +48,26 @@ export const userHandler = {
   }),
 
   getAll: asyncHandler(async (req: Request, res: Response) => {
-    const users = await userService.getAll(req.query);
+    const users = await userService.getAll(req.validated.query);
     res.json({ ok: true, data: users });
   }),
 
   getById: asyncHandler(async (req: Request, res: Response) => {
-    const id = req.params.id as string;
+    const id = req.validated.params.id as string;
 
     const user = await userService.getById(id);
     res.json({ ok: true, data: user });
   }),
 
   updateRole: asyncHandler(async (req: Request, res: Response) => {
-    const id = req.params.id as string;
+    const id = req.validated.params.id as string;
 
-    await userService.updateRole(id, req.body.role);
+    await userService.updateRole(id, req.validated.body.role);
     res.json({ ok: true });
   }),
 
   changePassword: asyncHandler(async (req: Request, res: Response) => {
-    const { currentPassword, newPassword } = req.body;
+    const { currentPassword, newPassword } = req.validated.body;
     await userService.changePassword(req.user.id, currentPassword, newPassword);
 
     await sessionService.revokeAll(req.user.id);
@@ -77,7 +77,7 @@ export const userHandler = {
   }),
 
   delete: asyncHandler(async (req: Request, res: Response) => {
-    const id = req.params.id as string;
+    const id = req.validated.params.id as string;
 
     await userService.delete(id);
     res.json({ ok: true });

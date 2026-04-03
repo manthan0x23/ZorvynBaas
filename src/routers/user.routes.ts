@@ -47,7 +47,7 @@ router.patch(
 router.delete(
   "/:id",
   authorize("user:delete"),
-  validate(UserIdSchema, "body"),
+  validate(UserIdSchema, "params"),
   userHandler.delete,
 );
 

@@ -5,6 +5,7 @@ import { authorize } from "~/middlewares/authorize";
 import { validate } from "~/middlewares/validate";
 import {
   DashboardFilterSchema,
+  InsightsSchema,
   TrendsSchema,
 } from "~/validators/dashboard.validator";
 
@@ -23,7 +24,14 @@ router.get(
   "/trends",
   authorize("dashboard:insights"),
   validate(TrendsSchema, "query"),
-  dashboardHandler.getMonthlyTrends,
+  dashboardHandler.getTrends,
+);
+
+router.get(
+  "/insights",
+  authorize("dashboard:insights"),
+  validate(InsightsSchema, "query"),
+  dashboardHandler.getInsights,
 );
 
 export { router as dashboardRoutes };

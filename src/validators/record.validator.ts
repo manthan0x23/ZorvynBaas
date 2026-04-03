@@ -6,12 +6,13 @@ export const CreateRecordSchema = z.object({
   notes: z.string().max(500).optional(),
   occurredAt: z.coerce.date(),
   status: z.enum(["pending", "posted", "cancelled"]).default("posted"),
+  type: z.enum(["income", "expense", "special"]).optional(),
 });
 
 export const UpdateRecordSchema = CreateRecordSchema.partial();
 
 export const RecordFilterSchema = z.object({
-  categoryId: z.string().optional(),
+  category: z.string().optional(),
   type: z.enum(["income", "expense", "special"]).optional(),
   status: z.enum(["pending", "posted", "cancelled"]).optional(),
   from: z.coerce.date().optional(),
@@ -32,3 +33,8 @@ export const MonthlyTrendsSchema = z.object({
     .max(2100)
     .default(new Date().getFullYear()),
 });
+
+export type CreateRecordInput = z.infer<typeof CreateRecordSchema>;
+export type UpdateRecordInput = z.infer<typeof UpdateRecordSchema>;
+export type RecordFilterInput = z.infer<typeof RecordFilterSchema>;
+export type MonthlyTrendsInput = z.infer<typeof MonthlyTrendsSchema>;

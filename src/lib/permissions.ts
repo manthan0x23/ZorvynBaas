@@ -16,7 +16,6 @@ export type Permission =
   | "category:read"
   | "category:manage";
 
-// role → what it can do
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   viewer: ["record:read", "dashboard:read", "category:read"],
   analyst: [

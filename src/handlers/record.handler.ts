@@ -33,16 +33,4 @@ export const recordHandler = {
     await recordService.delete(id);
     res.json({ ok: true });
   }),
-
-  getDashboardSummary: asyncHandler(async (req: Request, res: Response) => {
-    const summary = await recordService.getDashboardSummary(req.validated.body);
-    res.json({ ok: true, data: summary });
-  }),
-
-  getMonthlyTrends: asyncHandler(async (req: Request, res: Response) => {
-    const trends = await recordService.getMonthlyTrends(
-      req.validated.query.year as unknown as number,
-    );
-    res.json({ ok: true, data: trends });
-  }),
 };

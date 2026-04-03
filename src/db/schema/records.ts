@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { uniqueIndex } from "drizzle-orm/pg-core";
 import {
   varchar,
   pgTable,
@@ -30,7 +31,7 @@ export const categories = pgTable(
       .primaryKey()
       .$defaultFn(() => nanoid(8)),
 
-    name: text("name").notNull().unique(),
+    name: text("name").notNull(),
 
     type: recordTypeEnum("type").notNull(),
 
@@ -38,7 +39,10 @@ export const categories = pgTable(
 
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
-  (t) => [index("cat_type_idx").on(t.type)],
+  (t) => [
+    index("cat_type_idx").on(t.type),
+    uniqueIndex("Cat_cat_type_uniq_idx").on(t.name, t.type),
+  ],
 );
 
 export const financialRecords = pgTable(
@@ -71,6 +75,7 @@ export const financialRecords = pgTable(
   (t) => [
     index("fr_category_idx").on(t.categoryId),
     index("fr_date_idx").on(t.occurredAt),
+    index("fr_status_idx").on(t.status),
   ],
 );
 

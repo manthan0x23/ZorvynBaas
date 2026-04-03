@@ -19,12 +19,13 @@ export const categoryRepo = {
     return category ?? null;
   },
 
-  async findByName(name: string) {
-    const [category] = await db
-      .select()
-      .from(categories)
-      .where(eq(categories.name, name))
-      .limit(1);
+  async findByName(name: string, type?: CreateCategoryInput["type"]) {
+    const where = eq(categories.name, name);
+    if (type) {
+      where.append(eq(categories.type, type));
+    }
+
+    const [category] = await db.select().from(categories).where(where).limit(1);
 
     return category ?? null;
   },
@@ -43,7 +44,7 @@ export const categoryRepo = {
   },
 
   async ensure(name: string, type?: CreateCategoryInput["type"]) {
-    const existing = await this.findByName(name);
+    const existing = await this.findByName(name, type);
 
     if (existing) return existing;
 

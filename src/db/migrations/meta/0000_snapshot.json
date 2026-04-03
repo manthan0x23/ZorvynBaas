@@ -1,5 +1,5 @@
 {
-  "id": "46d198cb-f107-4e47-ba27-dabacadaf76a",
+  "id": "d5869b50-fac4-4089-9498-802044f13b36",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -100,6 +100,12 @@
           "notNull": false,
           "default": "now()"
         },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -193,19 +199,32 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "Cat_cat_type_uniq_idx": {
+          "name": "Cat_cat_type_uniq_idx",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "categories_name_unique": {
-          "name": "categories_name_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -216,7 +235,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "varchar(10)",
+          "type": "varchar(8)",
           "primaryKey": true,
           "notNull": true
         },
@@ -259,6 +278,12 @@
           "notNull": false,
           "default": "now()"
         },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp with time zone",
@@ -288,6 +313,21 @@
           "columns": [
             {
               "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fr_status_idx": {
+          "name": "fr_status_idx",
+          "columns": [
+            {
+              "expression": "status",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

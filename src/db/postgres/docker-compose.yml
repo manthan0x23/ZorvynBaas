@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: ZrovynBaas
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+    logging:
+      options:
+        max-size: 10m
+        max-file: '3'
+    ports:
+      - '5438:5432'
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./scripts/001_initialization.sql:/docker-entrypoint-initdb.d/001_initialization.sql

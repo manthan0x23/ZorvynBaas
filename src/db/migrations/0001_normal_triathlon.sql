@@ -1,0 +1,1 @@
+ALTER TABLE "financial_records" ALTER COLUMN "id" SET DATA TYPE varchar(8);

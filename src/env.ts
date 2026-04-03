@@ -1,7 +1,10 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 
-dotenv.config();
+dotenv.config({
+  quiet: true,
+  debug: true,
+});
 
 const envSchema = z.object({
   NODE_ENV: z

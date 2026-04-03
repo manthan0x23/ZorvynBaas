@@ -44,9 +44,9 @@ export const categories = pgTable(
 export const financialRecords = pgTable(
   "financial_records",
   {
-    id: varchar("id", { length: 10 })
+    id: varchar("id", { length: 8 })
       .primaryKey()
-      .$defaultFn(() => nanoid(10)),
+      .$defaultFn(() => nanoid(8)),
 
     categoryId: varchar("category_id", { length: 8 })
       .notNull()
@@ -61,6 +61,8 @@ export const financialRecords = pgTable(
     status: recordStatusEnum("status").notNull().default("posted"),
 
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
 
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()

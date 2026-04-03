@@ -33,6 +33,8 @@ export const users = pgTable(
       .defaultNow()
       .$onUpdateFn(() => new Date()),
 
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => [index("user_role_idx").on(table.role)],

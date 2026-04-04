@@ -1,6 +1,6 @@
-import { db } from "../lib/db";
-import { categories } from "../db/schema/records";
-import { eq } from "drizzle-orm";
+import { db } from "~/lib/db";
+import { categories } from "~/db/schema/records";
+import { and, eq } from "drizzle-orm";
 
 export type CreateCategoryInput = {
   name: string;
@@ -20,10 +20,9 @@ export const categoryRepo = {
   },
 
   async findByName(name: string, type?: CreateCategoryInput["type"]) {
-    const where = eq(categories.name, name);
-    if (type) {
-      where.append(eq(categories.type, type));
-    }
+    const where = type
+      ? and(eq(categories.name, name), eq(categories.type, type))
+      : eq(categories.name, name);
 
     const [category] = await db.select().from(categories).where(where).limit(1);
 
@@ -52,5 +51,9 @@ export const categoryRepo = {
       name,
       type: type ?? "special",
     });
+  },
+
+  async list() {
+    return await db.query.categories.findMany();
   },
 };

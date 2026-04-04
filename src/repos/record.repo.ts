@@ -1,6 +1,6 @@
 // src/repos/record.repo.ts
-import { db } from "../lib/db";
-import { financialRecords, categories } from "../db/schema/records";
+import { db } from "~/lib/db";
+import { financialRecords, categories } from "~/db/schema/records";
 import { eq, and, gte, lte, desc, isNull, sql } from "drizzle-orm";
 import { categoryRepo } from "./category.repo";
 
@@ -30,6 +30,8 @@ export type RecordFilters = {
   status?: RecordStatus;
   from?: Date;
   to?: Date;
+  page?: number;
+  limit?: number;
 };
 
 const notDeleted = isNull(financialRecords.deletedAt);
@@ -71,12 +73,15 @@ export const recordRepo = {
   },
 
   async findAll(filters?: RecordFilters) {
+    console.log(filters);
+
     const conditions = [notDeleted];
 
     if (filters?.category) {
       const category = await categoryRepo.findByName(filters.category);
-      if (category.id)
+      if (category?.id) {
         conditions.push(eq(financialRecords.categoryId, category.id));
+      }
     }
 
     if (filters?.status) {
@@ -94,6 +99,10 @@ export const recordRepo = {
     if (filters?.type) {
       conditions.push(eq(categories.type, filters.type));
     }
+
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+    const offset = (page - 1) * limit;
 
     return db
       .select({
@@ -113,7 +122,9 @@ export const recordRepo = {
       .from(financialRecords)
       .innerJoin(categories, eq(financialRecords.categoryId, categories.id))
       .where(and(...conditions))
-      .orderBy(desc(financialRecords.occurredAt));
+      .orderBy(desc(financialRecords.occurredAt))
+      .limit(limit)
+      .offset(offset);
   },
 
   async update(id: string, input: UpdateRecordInput) {

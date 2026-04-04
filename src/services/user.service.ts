@@ -21,14 +21,13 @@ export const userService = {
   ): Promise<{ userId: string; verified: boolean }> {
     const user = await userRepo.findByUsername(username);
 
-    console.log(user);
+    if (!user) throw new NotFoundError("User not found");
 
-    const hashToCheck =
-      user?.hashedPassword ?? "452b$10$invalidhashfortimingpurposes$goodHash";
+    const hashToCheck = user.hashedPassword;
 
     const verified = await Hash.verify(password, hashToCheck);
 
-    if (!user || !verified) throw new UnauthorizedError("Invalid credentials");
+    if (!verified) throw new UnauthorizedError("Invalid credentials");
 
     return { userId: user.id, verified };
   },

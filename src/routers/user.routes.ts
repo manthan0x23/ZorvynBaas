@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { userHandler } from "../handlers/user.handler";
+import { userHandler } from "~/handlers/user.handler";
 import { authorize } from "~/middlewares/authorize";
 import { validate } from "~/middlewares/validate";
 import { authenticate } from "~/middlewares/authenticate";

@@ -1,7 +1,7 @@
-import { sessionRepo } from "../repos/session.repo";
-import { userRepo } from "../repos/user.repo";
-import { UnauthorizedError, NotFoundError } from "../lib/errors";
-import { UserRole } from "../lib/permissions";
+import { sessionRepo } from "~/repos/session.repo";
+import { userRepo } from "~/repos/user.repo";
+import { UnauthorizedError, NotFoundError } from "~/lib/errors";
+import { UserRole } from "~/lib/permissions";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 

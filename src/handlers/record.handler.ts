@@ -16,7 +16,7 @@ export const recordHandler = {
   }),
 
   getAll: asyncHandler(async (req: Request, res: Response) => {
-    const records = await recordService.getAll(req.validated.body);
+    const records = await recordService.getAll(req.validated.query);
     res.json({ ok: true, data: records });
   }),
 

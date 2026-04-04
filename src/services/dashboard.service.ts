@@ -1,4 +1,4 @@
-import { recordRepo, RecordType } from "../repos/record.repo";
+import { recordRepo, RecordType } from "~/repos/record.repo";
 import { InsightsInput } from "~/validators/dashboard.validator";
 
 type CategoryTotal = {
@@ -101,7 +101,7 @@ export const dashboardService = {
     >();
 
     for (const row of raw) {
-      const month = Number(row.month); // parse it explicitly
+      const month = Number(row.month);
       if (!monthMap.has(month)) {
         monthMap.set(month, { income: 0, expense: 0, special: 0 });
       }

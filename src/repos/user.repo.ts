@@ -1,8 +1,8 @@
 // src/repos/user.repo.ts
-import { db } from "../lib/db";
-import { users } from "../db/schema/users";
+import { db } from "~/lib/db";
+import { users } from "~/db/schema/users";
 import { and, eq, ilike, isNull } from "drizzle-orm";
-import { UserRole } from "../lib/permissions";
+import { UserRole } from "~/lib/permissions";
 
 type CreateUserInput = {
   username: string;

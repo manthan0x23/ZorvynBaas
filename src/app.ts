@@ -4,13 +4,14 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
-import { errorHandler } from "./lib/errorHandler";
+import { errorHandler } from "./lib/error-handler";
 import { env } from "./env";
 import morgan from "morgan";
 import { authRoutes } from "./routers/auth.routes";
 import { userRoutes } from "./routers/user.routes";
 import { recordRoutes } from "./routers/record.routes";
 import { dashboardRoutes } from "./routers/dashboard.routes";
+import { globalLimiter } from "./middlewares/rate-limiter";
 
 const app = express();
 
@@ -24,7 +25,7 @@ app
       allowedHeaders: ["Content-Type", "Authorization"],
     }),
   )
-  .use(morgan("dev"));
+  .use(morgan("combined"));
 
 app.use(
   rateLimit({
@@ -47,6 +48,9 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+
+app.use(globalLimiter); // a global linient rate limiter (unlike auth)
+
 app.use("/api/users", userRoutes);
 app.use("/api/records", recordRoutes);
 app.use("/api/dashboard", dashboardRoutes);

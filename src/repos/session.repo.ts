@@ -1,6 +1,6 @@
 // src/repos/session.repo.ts
-import { db } from "../lib/db";
-import { sessions } from "../db/schema/users";
+import { db } from "~/lib/db";
+import { sessions } from "~/db/schema/users";
 import { eq } from "drizzle-orm";
 
 type CreateSessionInput = {

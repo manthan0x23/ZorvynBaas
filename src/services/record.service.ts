@@ -1,5 +1,5 @@
-import { recordRepo, RecordFilters, RecordType } from "../repos/record.repo";
-import { NotFoundError, BadRequestError } from "../lib/errors";
+import { recordRepo, RecordFilters, RecordType } from "~/repos/record.repo";
+import { NotFoundError, BadRequestError } from "~/lib/errors";
 import { categoryRepo } from "~/repos/category.repo";
 import {
   CreateRecordInput,

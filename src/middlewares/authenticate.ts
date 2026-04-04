@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { UnauthorizedError } from "../lib/errors";
+import { UnauthorizedError } from "~/lib/errors";
 import { sessionService } from "~/services/session.service";
 
 export async function authenticate(

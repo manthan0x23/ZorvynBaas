@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { dashboardHandler } from "../handlers/dashboard.handler";
+import { dashboardHandler } from "~/handlers/dashboard.handler";
 import { authenticate } from "~/middlewares/authenticate";
 import { authorize } from "~/middlewares/authorize";
 import { validate } from "~/middlewares/validate";

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { recordHandler } from "../handlers/record.handler";
+import { recordHandler } from "~/handlers/record.handler";
 import { authenticate } from "~/middlewares/authenticate";
 import { authorize } from "~/middlewares/authorize";
 import { validate } from "~/middlewares/validate";

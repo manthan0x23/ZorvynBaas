@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { hasPermission, Permission } from "../lib/permissions";
+import { hasPermission, Permission } from "~/lib/permissions";
 import { ForbiddenError } from "~/lib/errors";
 
 export function authorize(permission: Permission) {

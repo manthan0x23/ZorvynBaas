@@ -13,6 +13,8 @@ import { recordRoutes } from "./routers/record.routes";
 import { dashboardRoutes } from "./routers/dashboard.routes";
 import { globalLimiter } from "./middlewares/rate-limiter";
 import { requestTracer } from "./middlewares/request-tracer";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./lib/swagger";
 
 const app = express();
 
@@ -45,7 +47,11 @@ app
   .use(cookieParser())
   .use(compression());
 
-app.get("/health", (_req, res) => {
+if (process.env.NODE_ENV !== "production") {
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
+
+app.get("/api/health", (_req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
 

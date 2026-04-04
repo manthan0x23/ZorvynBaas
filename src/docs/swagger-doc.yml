@@ -1,0 +1,1283 @@
+openapi: 3.0.3
+
+info:
+  title: API
+  version: 1.0.0
+  description: |
+    Cookie-session authenticated REST API.
+
+    **Authentication flow:**
+    1. Call `POST /api/auth/login` with credentials.
+    2. The server sets an HttpOnly `session_id` cookie on success.
+    3. All subsequent requests are authenticated automatically via that cookie.
+    4. Call `POST /api/auth/logout` to end the session.
+
+    > When testing in Swagger UI, log in first. The browser will persist the cookie and send it on all further requests automatically.
+
+servers:
+  - url: http://localhost:{port}/api
+    variables:
+      port:
+        default: "3000"
+
+components:
+  securitySchemes:
+    cookieSession:
+      type: apiKey
+      in: cookie
+      name: session_id
+      description: HttpOnly session cookie set by `POST /api/auth/login`.
+
+  schemas:
+    OkTrue:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      required: [ok, code, message]
+      properties:
+        ok:
+          type: boolean
+          example: false
+        code:
+          type: string
+          example: UNAUTHORIZED
+        message:
+          type: string
+          example: Human-readable description
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          example: ab12cd
+        username:
+          type: string
+          example: alice_99
+        role:
+          type: string
+          enum: [viewer, analyst, admin]
+          example: viewer
+
+    RecordItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: a1b2c3d4
+        amount:
+          type: string
+          description: Stored as a fixed-point decimal string (2 d.p.).
+          example: "1500.00"
+        notes:
+          type: string
+          nullable: true
+          example: "Office supplies"
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2024-03-15T00:00:00.000Z"
+        status:
+          type: string
+          enum: [pending, posted, cancelled]
+          example: posted
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-03-15T10:22:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-03-15T10:22:00.000Z"
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+              example: cat001
+            name:
+              type: string
+              example: Utilities
+            type:
+              type: string
+              enum: [income, expense, special]
+              example: expense
+
+    CategoryTotal:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          example: cat001
+        categoryName:
+          type: string
+          example: Utilities
+        type:
+          type: string
+          enum: [income, expense, special]
+          example: expense
+        total:
+          type: number
+          example: 1500.00
+
+    RecentActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: a1b2c3d4
+        amount:
+          type: string
+          example: "1500.00"
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2024-03-15T00:00:00.000Z"
+        status:
+          type: string
+          enum: [pending, posted, cancelled]
+          example: posted
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+              example: cat001
+            name:
+              type: string
+              example: Utilities
+            type:
+              type: string
+              enum: [income, expense, special]
+              example: expense
+
+    MonthlyTrend:
+      type: object
+      properties:
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 3
+        income:
+          type: number
+          example: 5000.00
+        expense:
+          type: number
+          example: 3200.00
+        special:
+          type: number
+          example: 150.00
+        net:
+          type: number
+          description: income - expense
+          example: 1800.00
+
+    WeeklyTrend:
+      type: object
+      properties:
+        week:
+          type: integer
+          minimum: 1
+          maximum: 53
+          example: 12
+        income:
+          type: number
+          example: 1250.00
+        expense:
+          type: number
+          example: 800.00
+        special:
+          type: number
+          example: 0
+        net:
+          type: number
+          description: income - expense
+          example: 450.00
+
+    Mover:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          example: cat002
+        categoryName:
+          type: string
+          example: Dining
+        type:
+          type: string
+          enum: [income, expense, special]
+          example: expense
+        current:
+          type: number
+          example: 800.00
+        previous:
+          type: number
+          example: 500.00
+        delta:
+          type: number
+          example: 300.00
+        deltaPercent:
+          type: number
+          nullable: true
+          description: null when the category had zero spend in the previous period.
+          example: 60.00
+
+  responses:
+    Unauthorized:
+      description: Missing, expired, or invalid session cookie.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            ok: false
+            code: UNAUTHORIZED
+            message: No active session
+
+    Forbidden:
+      description: Authenticated user lacks the required permission.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            ok: false
+            code: FORBIDDEN
+            message: Access denied
+
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            ok: false
+            code: NOT_FOUND
+            message: Resource not found
+
+    ValidationError:
+      description: "Request body or query params failed schema validation (422)."
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ok, code, message, fields]
+            properties:
+              ok:
+                type: boolean
+                example: false
+              code:
+                type: string
+                example: VALIDATION_ERROR
+              message:
+                type: string
+                example: Validation failed
+              fields:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                example:
+                  username: ["Only lowercase letters, numbers, underscores"]
+                  password: ["Password must be at least 8 characters"]
+
+    RateLimited:
+      description: Too many requests.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            ok: false
+            code: RATE_LIMITED
+            message: Too many requests
+
+security:
+  - cookieSession: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Server is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  uptime:
+                    type: number
+                    example: 3724.5
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register and start a session
+      description: |
+        Creates a new account, then immediately creates a session — no separate login step required.
+        The `session_id` cookie is set on the response.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 32
+                  pattern: "^[a-z0-9_]+$"
+                  example: alice_99
+                  description: Lowercase letters, numbers, and underscores only.
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+                  example: "Str0ngP@ss"
+      responses:
+        "201":
+          description: Account created. `session_id` cookie is set.
+          headers:
+            Set-Cookie:
+              description: "HttpOnly session cookie. Attrs: HttpOnly; Secure (prod); SameSite=Lax; Max-Age=604800"
+              schema:
+                type: string
+                example: "session_id=<opaque>; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        example: ab12cd
+        "409":
+          description: Username already taken.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                ok: false
+                code: CONFLICT
+                message: Username already exists
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and start a session
+      description: |
+        Verifies credentials and creates a new session.
+        The `session_id` cookie is set on the response (HttpOnly, SameSite=Lax, 7-day expiry).
+        The response body returns the authenticated user's safe profile (no password hash).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  minLength: 1
+                  example: alice_99
+                password:
+                  type: string
+                  minLength: 1
+                  example: "Str0ngP@ss"
+      responses:
+        "200":
+          description: Login successful. `session_id` cookie is set.
+          headers:
+            Set-Cookie:
+              description: "HttpOnly session cookie. Attrs: HttpOnly; Secure (prod); SameSite=Lax; Max-Age=604800"
+              schema:
+                type: string
+                example: "session_id=<opaque>; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/UserProfile"
+              example:
+                ok: true
+                data:
+                  id: ab12cd
+                  username: alice_99
+                  role: viewer
+        "401":
+          description: Invalid credentials.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                ok: false
+                code: UNAUTHORIZED
+                message: Invalid credentials
+        "404":
+          description: Username not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                ok: false
+                code: NOT_FOUND
+                message: User not found
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Log out (invalidate current session)
+      description: Invalidates the current session and clears the `session_id` cookie.
+      responses:
+        "200":
+          description: Logged out.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkTrue"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout-all:
+    post:
+      tags: [Auth]
+      summary: Log out all sessions
+      description: Invalidates every active session for the current user and clears the `session_id` cookie.
+      responses:
+        "200":
+          description: All sessions terminated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkTrue"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OkTrue"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/me/password:
+    patch:
+      tags: [Users]
+      summary: Change own password
+      description: |
+        Changes the authenticated user's password.
+        All sessions (including the current one) are revoked and the `session_id` cookie is cleared.
+        The client must log in again after this call.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                  minLength: 1
+                  example: "OldP@ss1"
+                newPassword:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+                  example: "NewP@ss2"
+                  description: Must differ from current password.
+      responses:
+        "200":
+          description: Password changed. All sessions revoked — client must log in again.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Password changed. Please log in again.
+        "401":
+          description: Current password incorrect or no active session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                ok: false
+                code: UNAUTHORIZED
+                message: Current password is incorrect
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List all users
+      description: "Requires permission: `user:read`"
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [viewer, analyst, admin]
+          description: Filter by role.
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Filter by username (partial match).
+      responses:
+        "200":
+          description: User list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserProfile"
+              example:
+                ok: true
+                data:
+                  - id: ab12cd
+                    username: alice_99
+                    role: viewer
+                  - id: ef34gh
+                    username: bob_01
+                    role: analyst
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      description: "Requires permission: `user:read`"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 6
+          example: ab12cd
+          description: 6-character user ID.
+      responses:
+        "200":
+          description: User found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/UserProfile"
+              example:
+                ok: true
+                data:
+                  id: ab12cd
+                  username: alice_99
+                  role: viewer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      description: |
+        Requires permission: `user:delete`.
+        All sessions for the target user are also revoked.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 6
+          example: ab12cd
+          description: 6-character user ID.
+      responses:
+        "200":
+          description: User deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkTrue"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{id}/role:
+    patch:
+      tags: [Users]
+      summary: Update user role
+      description: |
+        Requires permission: `user:update`.
+        All active sessions for the target user are revoked on role change.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 6
+          example: ab12cd
+          description: 6-character user ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+                  enum: [viewer, analyst, admin]
+                  example: analyst
+      responses:
+        "200":
+          description: Role updated. Target user's sessions revoked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkTrue"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /records:
+    get:
+      tags: [Records]
+      summary: List records
+      description: "Requires permission: `record:read`. Results ordered by `occurredAt` descending."
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Filter by category name (exact match).
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [income, expense, special]
+          description: Filter by category type.
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, posted, cancelled]
+          description: Filter by record status.
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+          description: Filter records with `occurredAt` >= this date.
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+          description: Filter records with `occurredAt` <= this date.
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated record list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RecordItem"
+              example:
+                ok: true
+                data:
+                  - id: a1b2c3d4
+                    amount: "1500.00"
+                    notes: "Office supplies"
+                    occurredAt: "2024-03-15T00:00:00.000Z"
+                    status: posted
+                    createdAt: "2024-03-15T10:22:00.000Z"
+                    updatedAt: "2024-03-15T10:22:00.000Z"
+                    category:
+                      id: cat001
+                      name: Utilities
+                      type: expense
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    post:
+      tags: [Records]
+      summary: Create a record
+      description: |
+        Requires permission: `record:create`.
+        The `category` field is a name string — if no category with that name exists it is created automatically
+        using the provided `type`. If the category already exists its stored type is used.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category, amount, occurredAt]
+              properties:
+                category:
+                  type: string
+                  minLength: 1
+                  example: Utilities
+                  description: Category name. Created on first use.
+                amount:
+                  type: number
+                  format: double
+                  exclusiveMinimum: 0
+                  example: 1500.00
+                  description: Must be greater than zero. Stored as a 2 d.p. decimal string.
+                notes:
+                  type: string
+                  maxLength: 500
+                  example: "Monthly electricity bill"
+                occurredAt:
+                  type: string
+                  format: date-time
+                  example: "2024-03-15T00:00:00.000Z"
+                  description: When the transaction occurred (coerced to Date).
+                status:
+                  type: string
+                  enum: [pending, posted, cancelled]
+                  default: posted
+                  example: posted
+                type:
+                  type: string
+                  enum: [income, expense, special]
+                  example: expense
+                  description: Used only when creating a new category.
+      responses:
+        "201":
+          description: Record created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/RecordItem"
+        "400":
+          description: Amount is not greater than zero.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                ok: false
+                code: BAD_REQUEST
+                message: Amount must be greater than zero
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /records/{id}:
+    get:
+      tags: [Records]
+      summary: Get record by ID
+      description: "Requires permission: `record:read`"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 8
+          example: a1b2c3d4
+          description: 8-character record ID.
+      responses:
+        "200":
+          description: Record found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/RecordItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    patch:
+      tags: [Records]
+      summary: Update a record
+      description: "Requires permission: `record:update`. All fields optional — only provided fields are updated."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 8
+          example: a1b2c3d4
+          description: 8-character record ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category:
+                  type: string
+                  minLength: 1
+                  example: Rent
+                amount:
+                  type: number
+                  format: double
+                  exclusiveMinimum: 0
+                  example: 2000.00
+                notes:
+                  type: string
+                  maxLength: 500
+                  example: "Updated note"
+                occurredAt:
+                  type: string
+                  format: date-time
+                  example: "2024-04-01T00:00:00.000Z"
+                status:
+                  type: string
+                  enum: [pending, posted, cancelled]
+                  example: posted
+                type:
+                  type: string
+                  enum: [income, expense, special]
+                  example: expense
+                  description: Used only if also changing the category to a new one.
+      responses:
+        "200":
+          description: Record updated. Returns the full updated record.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/RecordItem"
+        "400":
+          description: Amount is not greater than zero.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                ok: false
+                code: BAD_REQUEST
+                message: Amount must be greater than zero
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      tags: [Records]
+      summary: Delete a record (soft)
+      description: |
+        Requires permission: `record:delete`.
+        Sets `deletedAt` on the record — the row is not removed from the database.
+        Soft-deleted records are excluded from all read queries.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 8
+          example: a1b2c3d4
+          description: 8-character record ID.
+      responses:
+        "200":
+          description: Record soft-deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkTrue"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Aggregate totals by type and category
+      description: |
+        Requires permission: `dashboard:read`.
+        Both `from` and `to` are optional — omitting them returns totals across all time.
+        Only `posted` records are included in all aggregations.
+        `recentActivity` always returns the 10 most recent non-deleted records regardless of the date range.
+      parameters:
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter records with `occurredAt` >= this value (optional).
+        - in: query
+          name: to
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter records with `occurredAt` <= this value. Must be >= `from` if both provided.
+      responses:
+        "200":
+          description: Dashboard summary.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OkTrue"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          totalIncome:
+                            type: number
+                            example: 5000.00
+                          totalExpenses:
+                            type: number
+                            example: 3200.00
+                          totalSpecial:
+                            type: number
+                            example: 150.00
+                          netBalance:
+                            type: number
+                            description: totalIncome - totalExpenses
+                            example: 1800.00
+                          categoryTotals:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/CategoryTotal"
+                          recentActivity:
+                            type: array
+                            description: The 10 most recent non-deleted records, unaffected by from/to filters.
+                            items:
+                              $ref: "#/components/schemas/RecentActivityItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /dashboard/trends:
+    get:
+      tags: [Dashboard]
+      summary: Monthly or weekly income/expense totals for a year
+      description: |
+        Requires permission: `dashboard:insights`.
+        All 12 months or 53 weeks are always returned — periods with no records have zero values.
+        Weekly grouping uses ISO week numbers (`isoyear` is used internally to handle weeks that span year boundaries).
+        Only `posted` records are included.
+      parameters:
+        - in: query
+          name: year
+          required: false
+          schema:
+            type: integer
+            minimum: 2000
+          description: 4-digit year to aggregate. Defaults to the current year.
+        - in: query
+          name: period
+          required: false
+          schema:
+            type: string
+            enum: [monthly, weekly]
+            default: monthly
+          description: Grouping granularity.
+      responses:
+        "200":
+          description: Trend data — shape depends on `period`.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OkTrue"
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - type: array
+                            description: "Returned when period=monthly. Always 12 items."
+                            items:
+                              $ref: "#/components/schemas/MonthlyTrend"
+                          - type: array
+                            description: "Returned when period=weekly. Always 53 items."
+                            items:
+                              $ref: "#/components/schemas/WeeklyTrend"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /dashboard/insights:
+    get:
+      tags: [Dashboard]
+      summary: Spending patterns, savings rate, and top category movers
+      description: |
+        Requires permission: `dashboard:insights`.
+        Defaults to the last 30 days when no date range is supplied.
+        A prior period of the same length is automatically derived immediately before `from`
+        and used to compute `topMovers` deltas.
+        Only `posted` records are included. Only `expense` categories appear in
+        `spendingPatterns` and `topMovers`.
+        `deltaPercent` is `null` when a category had zero spend in the prior period.
+      parameters:
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: string
+            format: date-time
+            description: Start of analysis period. Defaults to 30 days ago.
+        - in: query
+          name: to
+          required: false
+          schema:
+            type: string
+            format: date-time
+            description: End of analysis period. Defaults to now. Must be >= `from`.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 5
+          description: Max number of categories returned per section in spendingPatterns and topMovers.
+      responses:
+        "200":
+          description: Insights for the requested period.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OkTrue"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          period:
+                            type: object
+                            properties:
+                              from:
+                                type: string
+                                format: date-time
+                              to:
+                                type: string
+                                format: date-time
+                          spendingPatterns:
+                            type: object
+                            description: Only expense-type categories are included.
+                            properties:
+                              totalExpense:
+                                type: number
+                                example: 3200.00
+                              topCategories:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    categoryId:
+                                      type: string
+                                      example: cat001
+                                    categoryName:
+                                      type: string
+                                      example: Utilities
+                                    total:
+                                      type: number
+                                      example: 1500.00
+                                    sharePercent:
+                                      type: number
+                                      description: Percentage of totalExpense. Rounded to 2 d.p.
+                                      example: 46.88
+                          savingsRate:
+                            type: object
+                            properties:
+                              totalIncome:
+                                type: number
+                                example: 5000.00
+                              totalExpenses:
+                                type: number
+                                example: 3200.00
+                              net:
+                                type: number
+                                example: 1800.00
+                              savingsRate:
+                                type: number
+                                description: "(net / totalIncome) * 100, rounded to 2 d.p. Returns 0 when income is zero."
+                                example: 36.00
+                          topMovers:
+                            type: object
+                            description: Only expense-type categories are included.
+                            properties:
+                              increased:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/Mover"
+                              decreased:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/Mover"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Users
+  - name: Records
+  - name: Dashboard

@@ -24,7 +24,7 @@ function randomAmount(type: string) {
 export async function seedRecordsFn() {
   console.log("\n\n📊 Seeding records...");
 
-  const allCategories = await categoryRepo.list();
+  const allCategories = await categoryRepo.list({ id: "seed" } as any);
 
   if (!allCategories.length) {
     console.error("Categories missing");
@@ -37,7 +37,7 @@ export async function seedRecordsFn() {
     const category =
       allCategories[Math.floor(Math.random() * allCategories.length)];
 
-    await recordRepo.create({
+    await recordRepo.create({ id: "seed" } as any, {
       categoryId: category.id,
       amount: randomAmount(category.type).toString(),
       notes: `Seeded ${category.name}`,

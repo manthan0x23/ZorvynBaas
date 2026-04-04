@@ -1,5 +1,7 @@
 import { recordRepo, RecordType } from "~/repos/record.repo";
 import { InsightsInput } from "~/validators/dashboard.validator";
+import { logger } from "~/lib/logger";
+import { RequestContext } from "~/types";
 
 type CategoryTotal = {
   categoryId: string;
@@ -37,32 +39,41 @@ function parseRows(
 }
 
 export const dashboardService = {
-  async getInsights(filters?: InsightsInput) {
+  async getInsights(ctx: RequestContext, filters?: InsightsInput) {
+    logger.info(ctx,`[${ctx.id}] dashboard.insights.service`);
+
     const limit = filters?.limit ?? 5;
     const { from, to } = resolvePeriod(filters);
     const prev = derivePreviousPeriod(from, to);
 
     const [currentRows, previousRows] = await Promise.all([
-      recordRepo.sumByCategoryForPeriod(from, to),
-      recordRepo.sumByCategoryForPeriod(prev.from, prev.to),
+      recordRepo.sumByCategoryForPeriod(ctx, from, to),
+      recordRepo.sumByCategoryForPeriod(ctx, prev.from, prev.to),
     ]);
 
     const current = parseRows(currentRows);
     const previous = parseRows(previousRows);
 
-    return {
+    const result = {
       period: { from, to },
       spendingPatterns: deriveSpendingPatterns(current, limit),
       savingsRate: deriveSavingsRate(current),
       topMovers: deriveTopMovers(current, previous, limit),
     };
+
+    return result;
   },
 
-  async getDashboardSummary(filters?: { from?: Date; to?: Date }) {
+  async getDashboardSummary(
+    ctx: RequestContext,
+    filters?: { from?: Date; to?: Date },
+  ) {
+    logger.info(ctx,`[${ctx.id}] dashboard.summary.service`);
+
     const [byType, byCategory, recent] = await Promise.all([
-      recordRepo.sumByType(filters),
-      recordRepo.sumByCategory(filters),
-      recordRepo.recentActivity(10),
+      recordRepo.sumByType(ctx, filters),
+      recordRepo.sumByCategory(ctx, filters),
+      recordRepo.recentActivity(ctx, 10),
     ]);
 
     const totals: Record<RecordType, number> = {
@@ -82,7 +93,7 @@ export const dashboardService = {
       total: parseFloat(row.total ?? "0"),
     }));
 
-    return {
+    const result = {
       totalIncome: totals.income,
       totalExpenses: totals.expense,
       totalSpecial: totals.special,
@@ -90,10 +101,14 @@ export const dashboardService = {
       categoryTotals,
       recentActivity: recent,
     };
+
+    return result;
   },
 
-  async getMonthlyTrends(year: number) {
-    const raw = await recordRepo.monthlyTotals(year);
+  async getMonthlyTrends(ctx: RequestContext, year: number) {
+    logger.info(ctx,`[${ctx.id}] dashboard.monthly-trends.service`);
+
+    const raw = await recordRepo.monthlyTotals(ctx, year);
 
     const monthMap = new Map<
       number,
@@ -109,7 +124,7 @@ export const dashboardService = {
       entry[row.type as RecordType] = parseFloat(row.total ?? "0");
     }
 
-    return Array.from({ length: 12 }, (_, i) => {
+    const result = Array.from({ length: 12 }, (_, i) => {
       const month = i + 1;
       const data = monthMap.get(month) ?? { income: 0, expense: 0, special: 0 };
       return {
@@ -118,10 +133,14 @@ export const dashboardService = {
         net: data.income - data.expense,
       };
     });
+
+    return result;
   },
 
-  async getWeeklyTrends(year: number) {
-    const raw = await recordRepo.weeklyTotals(year);
+  async getWeeklyTrends(ctx: RequestContext, year: number) {
+    logger.info(ctx,`[${ctx.id}] dashboard.weekly-trends.service`);
+
+    const raw = await recordRepo.weeklyTotals(ctx, year);
     const WEEKS_IN_YEAR = 53;
 
     const weekMap = new Map<
@@ -138,11 +157,13 @@ export const dashboardService = {
       entry[row.type as RecordType] = parseFloat(row.total ?? "0");
     }
 
-    return Array.from({ length: WEEKS_IN_YEAR }, (_, i) => {
+    const result = Array.from({ length: WEEKS_IN_YEAR }, (_, i) => {
       const week = i + 1;
       const data = weekMap.get(week) ?? { income: 0, expense: 0, special: 0 };
       return { week, ...data, net: data.income - data.expense };
     });
+
+    return result;
   },
 };
 

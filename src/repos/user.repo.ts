@@ -1,8 +1,9 @@
-// src/repos/user.repo.ts
 import { db } from "~/lib/db";
 import { users } from "~/db/schema/users";
 import { and, eq, ilike, isNull } from "drizzle-orm";
 import { UserRole } from "~/lib/permissions";
+import { logger } from "~/lib/logger";
+import { RequestContext } from "~/types";
 
 type CreateUserInput = {
   username: string;
@@ -17,13 +18,17 @@ type UpdateUserInput = Partial<{
 }>;
 
 export const userRepo = {
-  async create(input: CreateUserInput) {
+  async create(ctx: RequestContext, input: CreateUserInput) {
+    logger.info(ctx,`[${ctx.id}] user.create.repo `);
+
     const [user] = await db.insert(users).values(input).returning();
 
     return user;
   },
 
-  async findById(id: string) {
+  async findById(ctx: RequestContext, id: string) {
+    logger.info(ctx,`[${ctx.id}] user.findById.repo`);
+
     const [user] = await db
       .select()
       .from(users)
@@ -33,7 +38,9 @@ export const userRepo = {
     return user ?? null;
   },
 
-  async findByUsername(username: string) {
+  async findByUsername(ctx: RequestContext, username: string) {
+    logger.info(ctx,`[${ctx.id}] user.findByUsername.repo`);
+
     const [user] = await db
       .select()
       .from(users)
@@ -43,7 +50,12 @@ export const userRepo = {
     return user ?? null;
   },
 
-  async findAll(filters?: { role?: UserRole; search?: string }) {
+  async findAll(
+    ctx: RequestContext,
+    filters?: { role?: UserRole; search?: string },
+  ) {
+    logger.info(ctx,`[${ctx.id}] user.findAll.repo`);
+
     const conditions = [isNull(users.deletedAt)];
 
     if (filters?.role) {
@@ -54,13 +66,17 @@ export const userRepo = {
       conditions.push(ilike(users.username, `%${filters.search}%`));
     }
 
-    return db
+    const result = await db
       .select()
       .from(users)
       .where(and(...conditions));
+
+    return result;
   },
 
-  async update(id: string, input: UpdateUserInput) {
+  async update(ctx: RequestContext, id: string, input: UpdateUserInput) {
+    logger.info(ctx,`[${ctx.id}] user.update.repo`);
+
     const [updated] = await db
       .update(users)
       .set({ ...input, updatedAt: new Date() })
@@ -70,7 +86,9 @@ export const userRepo = {
     return updated ?? null;
   },
 
-  async delete(id: string) {
+  async delete(ctx: RequestContext, id: string) {
+    logger.info(ctx,`[${ctx.id}] user.delete.repo`);
+
     const now = new Date();
 
     const [updated] = await db
@@ -82,7 +100,12 @@ export const userRepo = {
     return updated ?? null;
   },
 
-  async existsByUsername(username: string): Promise<boolean> {
+  async existsByUsername(
+    ctx: RequestContext,
+    username: string,
+  ): Promise<boolean> {
+    logger.info(ctx,`[${ctx.id}] user.existsByUsername.repo`);
+
     const [user] = await db
       .select({ id: users.id })
       .from(users)

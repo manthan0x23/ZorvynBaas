@@ -1,13 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodSchema } from "zod";
+import { createContext } from "~/lib/ctx";
 import { ValidationError } from "~/lib/errors";
+import { logger } from "~/lib/logger";
 
 type Source = "body" | "query" | "params";
 
 export function validate<T>(schema: ZodSchema<T>, source: Source = "body") {
   return (req: Request, _res: Response, next: NextFunction) => {
-    const data = req[source];
+    logger.info(createContext(req), `[${req.id}] validate.${source}.start`);
 
+    const data = req[source];
     const result = schema.safeParse(data);
 
     if (!result.success) {
@@ -21,9 +24,11 @@ export function validate<T>(schema: ZodSchema<T>, source: Source = "body") {
 
       return next(new ValidationError(fields));
     }
-    
+
     req.validated ??= {};
     req.validated[source] = result.data;
+
+    logger.info(createContext(req), `[${req.id}] validate.${source}.success`);
 
     next();
   };

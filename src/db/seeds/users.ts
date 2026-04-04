@@ -15,7 +15,10 @@ export async function seedUsers() {
   const DEFAULT_PASSWORD = "password123";
 
   for (const user of seedUsers) {
-    const existing = await userRepo.findByUsername(user.username);
+    const existing = await userRepo.findByUsername(
+      { id: "seed" } as any,
+      user.username,
+    );
 
     if (existing) {
       console.log(`⏭️ Skipping ${user.username} (already exists)`);
@@ -24,7 +27,7 @@ export async function seedUsers() {
 
     const hashedPassword = await Hash.make(DEFAULT_PASSWORD);
 
-    userRepo.create({
+    userRepo.create({ id: "seed" } as any, {
       username: user.username,
       role: user.role,
       hashedPassword,

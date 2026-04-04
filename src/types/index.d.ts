@@ -3,6 +3,8 @@ import { UserRole } from "~/lib/permissions";
 declare global {
   namespace Express {
     interface Request {
+      id: string;
+      startTime: number;
       user: { id: string; username: string; role: UserRole };
       validated: {
         body?: any;
@@ -12,3 +14,9 @@ declare global {
     }
   }
 }
+
+export type RequestContext = {
+  id: string;
+  startTime: number;
+  user: { id: string; username: string; role: UserRole };
+};

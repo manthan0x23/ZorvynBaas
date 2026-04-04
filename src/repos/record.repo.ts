@@ -1,8 +1,9 @@
-// src/repos/record.repo.ts
 import { db } from "~/lib/db";
 import { financialRecords, categories } from "~/db/schema/records";
 import { eq, and, gte, lte, desc, isNull, sql } from "drizzle-orm";
 import { categoryRepo } from "./category.repo";
+import { logger } from "~/lib/logger";
+import { RequestContext } from "~/types";
 
 export type RecordStatus = "pending" | "posted" | "cancelled";
 export type RecordType = "income" | "expense" | "special";
@@ -37,7 +38,9 @@ export type RecordFilters = {
 const notDeleted = isNull(financialRecords.deletedAt);
 
 export const recordRepo = {
-  async create(input: CreateRecordInput) {
+  async create(ctx: RequestContext, input: CreateRecordInput) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.create (repo)`);
+
     const [record] = await db
       .insert(financialRecords)
       .values({
@@ -48,7 +51,9 @@ export const recordRepo = {
     return record;
   },
 
-  async findById(id: string) {
+  async findById(ctx: RequestContext, id: string) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.findById (repo)`);
+
     const [record] = await db
       .select({
         id: financialRecords.id,
@@ -72,13 +77,13 @@ export const recordRepo = {
     return record ?? null;
   },
 
-  async findAll(filters?: RecordFilters) {
-    console.log(filters);
+  async findAll(ctx: RequestContext, filters?: RecordFilters) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.findAll (repo)`);
 
     const conditions = [notDeleted];
 
     if (filters?.category) {
-      const category = await categoryRepo.findByName(filters.category);
+      const category = await categoryRepo.findByName(ctx, filters.category);
       if (category?.id) {
         conditions.push(eq(financialRecords.categoryId, category.id));
       }
@@ -127,7 +132,9 @@ export const recordRepo = {
       .offset(offset);
   },
 
-  async update(id: string, input: UpdateRecordInput) {
+  async update(ctx: RequestContext, id: string, input: UpdateRecordInput) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.update (repo)`);
+
     const [updated] = await db
       .update(financialRecords)
       .set({ ...input, updatedAt: new Date() })
@@ -137,7 +144,9 @@ export const recordRepo = {
     return updated ?? null;
   },
 
-  async delete(id: string) {
+  async delete(ctx: RequestContext, id: string) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.uloggerpdate (repo)`);
+
     const now = new Date();
 
     const [updated] = await db
@@ -149,7 +158,9 @@ export const recordRepo = {
     return updated ?? null;
   },
 
-  async sumByType(filters?: { from?: Date; to?: Date }) {
+  async sumByType(ctx: RequestContext, filters?: { from?: Date; to?: Date }) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.sumByType (repo)`);
+
     const conditions = [notDeleted, eq(financialRecords.status, "posted")];
 
     if (filters?.from)
@@ -168,7 +179,12 @@ export const recordRepo = {
       .groupBy(categories.type);
   },
 
-  async sumByCategory(filters?: { from?: Date; to?: Date }) {
+  async sumByCategory(
+    ctx: RequestContext,
+    filters?: { from?: Date; to?: Date },
+  ) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.sumByCategory (repo)`);
+
     const conditions = [notDeleted, eq(financialRecords.status, "posted")];
 
     if (filters?.from)
@@ -189,7 +205,9 @@ export const recordRepo = {
       .groupBy(categories.id, categories.name, categories.type);
   },
 
-  async recentActivity(limit: number = 10) {
+  async recentActivity(ctx: RequestContext, limit: number = 10) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.recentActivity (repo)`);
+
     return db
       .select({
         id: financialRecords.id,
@@ -209,7 +227,9 @@ export const recordRepo = {
       .limit(limit);
   },
 
-  async monthlyTotals(year: number) {
+  async monthlyTotals(ctx: RequestContext, year: number) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.monthlyTotals (repo)`);
+
     return db
       .select({
         month: sql<number>`extract(month from ${financialRecords.occurredAt})`,
@@ -232,10 +252,12 @@ export const recordRepo = {
       .orderBy(sql`extract(month from ${financialRecords.occurredAt})`);
   },
 
-  async weeklyTotals(year: number) {
+  async weeklyTotals(ctx: RequestContext, year: number) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.weeklyTotals (repo)`);
+
     return db
       .select({
-        week: sql<number>`extract(isoyear from ${financialRecords.occurredAt})`, // for filtering
+        week: sql<number>`extract(isoyear from ${financialRecords.occurredAt})`,
         isoWeek: sql<number>`extract(week from ${financialRecords.occurredAt})`,
         type: categories.type,
         total: sql<string>`sum(${financialRecords.amount})`,
@@ -258,7 +280,9 @@ export const recordRepo = {
       .orderBy(sql`extract(week from ${financialRecords.occurredAt})`);
   },
 
-  async sumByCategoryForPeriod(from: Date, to: Date) {
+  async sumByCategoryForPeriod(ctx: RequestContext, from: Date, to: Date) {
+    logger.info(ctx,`[${ctx.id}] recordRepo.sumByCategoryForPeriod (repo)`);
+
     return db
       .select({
         categoryId: categories.id,

@@ -2,84 +2,135 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../lib/handler";
 import { userService } from "../services/user.service";
 import { sessionService } from "../services/session.service";
+import { logger } from "~/lib/logger";
+import { createContext } from "~/lib/ctx";
 
 export const userHandler = {
   register: asyncHandler(async (req: Request, res: Response) => {
+    const ctx = createContext(req);
+
+    logger.info(ctx, `[${req.id}] user.register.handler`);
     const { username, password } = req.validated.body;
 
-    console.log(username, password);
+    const userId = await userService.register(ctx, username, password);
+    const sessionId = await sessionService.create(ctx, userId);
 
-    const userId = await userService.register(username, password);
-
-    const sessionId = await sessionService.create(userId);
     res.cookie("session_id", sessionId, cookieOptions());
 
     res.status(201).json({ ok: true, data: { userId } });
   }),
 
   login: asyncHandler(async (req: Request, res: Response) => {
-    const { username, password } = req.validated.body;
-    const { userId } = await userService.login(username, password);
+    const ctx = createContext(req);
 
-    const sessionId = await sessionService.create(userId);
+    logger.info(ctx, `[${req.id}] user.login.handler`);
+    const { username, password } = req.validated.body;
+
+    const { userId } = await userService.login(ctx, username, password);
+    const sessionId = await sessionService.create(ctx, userId);
+
     res.cookie("session_id", sessionId, cookieOptions());
 
-    const user = await userService.getById(userId);
+    const user = await userService.getById(ctx, userId);
+
     res.json({ ok: true, data: user });
   }),
 
   logout: asyncHandler(async (req: Request, res: Response) => {
+    const ctx = createContext(req);
+
+    logger.info(ctx, `[${req.id}] user.logout.handler`);
     const sessionId = req.cookies?.session_id;
-    if (sessionId) await sessionService.revoke(sessionId);
+
+    if (sessionId) await sessionService.revoke(ctx, sessionId);
 
     res.clearCookie("session_id");
+
     res.json({ ok: true });
   }),
 
   logoutAll: asyncHandler(async (req: Request, res: Response) => {
-    await sessionService.revokeAll(req.user.id);
+    const ctx = createContext(req);
+
+    logger.info(ctx, `[${req.id}] user.logoutAll.handler`);
+
+    await sessionService.revokeAll(ctx, req.user.id);
     res.clearCookie("session_id");
+
     res.json({ ok: true });
   }),
 
   getMe: asyncHandler(async (req: Request, res: Response) => {
-    const user = await userService.getById(req.user.id);
+    const ctx = createContext(req);
+
+    logger.info(ctx, `[${req.id}] user.getMe.handler`);
+
+    const user = await userService.getById(ctx, req.user.id);
+
     res.json({ ok: true, data: user });
   }),
 
   getAll: asyncHandler(async (req: Request, res: Response) => {
-    const users = await userService.getAll(req.validated.query);
+    const ctx = createContext(req);
+
+    logger.info(ctx, `[${req.id}] user.getAll.handler`);
+
+    const users = await userService.getAll(ctx, req.validated.query);
+
     res.json({ ok: true, data: users });
   }),
 
   getById: asyncHandler(async (req: Request, res: Response) => {
+    const ctx = createContext(req);
+
+    logger.info(ctx, `[${req.id}] user.getById.handler`);
     const id = req.validated.params.id as string;
 
-    const user = await userService.getById(id);
+    const user = await userService.getById(ctx, id);
+
     res.json({ ok: true, data: user });
   }),
 
   updateRole: asyncHandler(async (req: Request, res: Response) => {
+    const ctx = createContext(req);
+
+    logger.info(ctx, `[${req.id}] user.updateRole.handler`);
     const id = req.validated.params.id as string;
 
-    await userService.updateRole(id, req.validated.body.role);
+    await userService.updateRole(ctx, id, req.validated.body.role);
+
     res.json({ ok: true });
   }),
 
   changePassword: asyncHandler(async (req: Request, res: Response) => {
-    const { currentPassword, newPassword } = req.validated.body;
-    await userService.changePassword(req.user.id, currentPassword, newPassword);
+    const ctx = createContext(req);
 
-    await sessionService.revokeAll(req.user.id);
+    logger.info(ctx, `[${req.id}] user.changePassword.handler`);
+
+    const { currentPassword, newPassword } = req.validated.body;
+
+    await userService.changePassword(
+      ctx,
+      req.user.id,
+      currentPassword,
+      newPassword,
+    );
+    await sessionService.revokeAll(ctx, req.user.id);
+
     res.clearCookie("session_id");
 
     res.json({ ok: true, message: "Password changed. Please log in again." });
   }),
 
   delete: asyncHandler(async (req: Request, res: Response) => {
+    const ctx = createContext(req);
+
+    logger.info(ctx, `[${req.id}] user.delete.handler`);
+
     const id = req.validated.params.id as string;
 
-    await userService.delete(id);
+    await userService.delete(ctx, id);
+
     res.json({ ok: true });
   }),
 };

@@ -12,10 +12,12 @@ import { userRoutes } from "./routers/user.routes";
 import { recordRoutes } from "./routers/record.routes";
 import { dashboardRoutes } from "./routers/dashboard.routes";
 import { globalLimiter } from "./middlewares/rate-limiter";
+import { requestTracer } from "./middlewares/request-tracer";
 
 const app = express();
 
 app
+  .use(requestTracer)
   .use(helmet())
   .use(
     cors({

@@ -34,7 +34,7 @@ export async function seedCategoriesFn() {
   console.log("📂 Seeding categories...");
 
   for (const cat of seedCategories) {
-    await categoryRepo.ensure(cat.name, cat.type);
+    await categoryRepo.ensure({ id: "seed" } as any, cat.name, cat.type);
 
     console.log(`✅ Added category: ${cat.name}`);
   }

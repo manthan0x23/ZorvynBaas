@@ -1,6 +1,14 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import { env } from "~/env";
 
+import path from "path";
+import fs from "fs";
+
+const devPath = path.join(process.cwd(), "src/docs");
+const prodPath = path.join(process.cwd(), "docs");
+
+const docsPath = fs.existsSync(devPath) ? devPath : prodPath;
+
 export const swaggerSpec = swaggerJSDoc({
   definition: {
     openapi: "3.0.3",
@@ -103,5 +111,5 @@ export const swaggerSpec = swaggerJSDoc({
     },
     security: [{ cookieSession: [] }],
   },
-  apis: ["./src/docs/**/*.yml"],
+  apis: [`${docsPath}/**/*.yml`],
 });

@@ -2,19 +2,32 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres, { Sql } from "postgres";
 import path from "path";
-import { env } from "../env";
+import { config } from "dotenv";
 
-const migrationClient: Sql<any> = postgres(env.DATABASE_URL, { max: 1 });
+config();
 
-export const db = drizzle(postgres(env.DATABASE_URL));
+const DB_URL = process.env.DATABASE_URL;
+
+if (!DB_URL) {
+  throw new Error(
+    "❌ DATABASE_URL is not defined. Please set it in your environment variables.",
+  );
+}
+
+const migrationClient: Sql<any> = postgres(DB_URL, {
+  max: 1,
+});
+
+export const db = drizzle(postgres(DB_URL));
 
 export async function migrate_db() {
   try {
-    console.log("DB URL ::::: ", env.DATABASE_URL);
+    console.log("Running migrations...");
 
     await migrate(drizzle(migrationClient), {
       migrationsFolder: path.join(__dirname, "migrations"),
     });
+
     await migrationClient.end();
   } catch (error) {
     throw new Error(`Migration failed: ${error}`);
@@ -23,8 +36,9 @@ export async function migrate_db() {
 
 migrate_db()
   .then(() => {
-    console.log("Migration completed successfully.");
+    console.log("✅ Migration completed successfully.");
   })
   .catch((error) => {
     console.error(error);
+    process.exit(1);
   });

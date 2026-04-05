@@ -139,7 +139,7 @@ function cookieOptions() {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    sameSite: "none" as any,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 }

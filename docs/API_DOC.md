@@ -352,6 +352,7 @@ Returns a paginated, date-ordered (`occurredAt` desc) list of non-deleted record
 
 | Param      | Type                                 | Default | Description                           |
 | ---------- | ------------------------------------ | ------- | ------------------------------------- |
+| `search`   | string                               | —       | Filter by search (category name,type , notes)      |
 | `category` | string                               | —       | Filter by category name (exact match) |
 | `type`     | `income` \| `expense` \| `special`   | —       | Filter by category type               |
 | `status`   | `pending` \| `posted` \| `cancelled` | —       | Filter by record status               |

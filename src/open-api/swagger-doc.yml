@@ -738,6 +738,11 @@ paths:
       description: "Requires permission: `record:read`. Results ordered by `occurredAt` descending."
       parameters:
         - in: query
+          name: search
+          schema:
+            type: string
+          description: Partial match against notes, category name, or category type.
+        - in: query
           name: category
           schema:
             type: string

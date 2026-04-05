@@ -1,9 +1,10 @@
-import { Request, Response } from "express";
+import { CookieOptions, Request, Response } from "express";
 import { asyncHandler } from "../lib/handler";
 import { userService } from "../services/user.service";
 import { sessionService } from "../services/session.service";
 import { logger } from "~/lib/logger";
 import { createContext } from "~/lib/ctx";
+import { env } from "~/env";
 
 export const userHandler = {
   register: asyncHandler(async (req: Request, res: Response) => {
@@ -135,11 +136,13 @@ export const userHandler = {
   }),
 };
 
-function cookieOptions() {
+function cookieOptions(): CookieOptions {
+  const isProd = env.NODE_ENV === "production";
+
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "none" as any,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 }

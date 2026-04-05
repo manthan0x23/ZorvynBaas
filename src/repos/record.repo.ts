@@ -33,6 +33,7 @@ export type RecordFilters = {
   to?: Date;
   page?: number;
   limit?: number;
+  search?: string; // matches against notes, category name, or type
 };
 
 const notDeleted = isNull(financialRecords.deletedAt);
@@ -116,6 +117,17 @@ export const recordRepo = {
 
     if (filters?.type) {
       conditions.push(eq(categories.type, filters.type));
+    }
+
+    if (filters?.search) {
+      const term = `%${filters.search}%`;
+      conditions.push(
+        sql`(
+          ${financialRecords.notes} ilike ${term}
+          or ${categories.name}::text ilike ${term}
+          or ${categories.type}::text ilike ${term}
+        )`,
+      );
     }
 
     const page = filters?.page ?? 1;

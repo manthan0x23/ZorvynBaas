@@ -12,6 +12,7 @@ export const CreateRecordSchema = z.object({
 export const UpdateRecordSchema = CreateRecordSchema.partial();
 
 export const RecordFilterSchema = z.object({
+  search: z.string().optional(),
   category: z.string().optional(),
   type: z.enum(["income", "expense", "special"]).optional(),
   status: z.enum(["pending", "posted", "cancelled"]).optional(),

@@ -10,9 +10,14 @@ const envSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
 
-  PORT: z.coerce.number().default(5000),
+  PORT: z.coerce.number().default(3000),
 
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+
+  BASE_URL: z
+    .string()
+    .optional()
+    .default(`http://localhost:${process.env.PORT ?? 3000}`),
 });
 
 const _env = envSchema.safeParse(process.env);

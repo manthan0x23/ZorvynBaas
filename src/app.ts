@@ -14,12 +14,22 @@ import { globalLimiter } from "./middlewares/rate-limiter";
 import { requestTracer } from "./middlewares/request-tracer";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./lib/swagger-spec";
+import { env } from "./env";
 
 const app = express();
 
+app.use(requestTracer);
 app
-  .use(requestTracer)
-  .use(helmet())
+  .use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          connectSrc: ["'self'", env.BASE_URL],
+        },
+      },
+    }),
+  )
   .use(
     cors({
       origin: "*",

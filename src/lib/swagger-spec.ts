@@ -28,7 +28,7 @@ export const swaggerSpec = swaggerJSDoc({
     },
     servers: [
       {
-        url: `http://localhost:${env.PORT}/api`,
+        url: `${env.BASE_URL}/api`,
       },
     ],
     components: {

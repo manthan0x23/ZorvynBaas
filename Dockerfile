@@ -28,7 +28,7 @@ COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src/docs ./docs
+COPY --from=builder /app/src/open-api ./open-api
 COPY --from=builder /app/ ./
 
 # logs dir

@@ -14,7 +14,7 @@ import { dashboardRoutes } from "./routers/dashboard.routes";
 import { globalLimiter } from "./middlewares/rate-limiter";
 import { requestTracer } from "./middlewares/request-tracer";
 import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from "./lib/swagger";
+import { swaggerSpec } from "./lib/swagger-spec";
 
 const app = express();
 

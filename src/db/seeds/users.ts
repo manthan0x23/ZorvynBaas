@@ -5,11 +5,9 @@ export async function seedUsers() {
   console.log("\n\n📂 Seeding User...");
 
   const seedUsers = [
-    { username: "admin", role: "admin" },
+    { username: "admin1", role: "admin" },
     { username: "analyst1", role: "analyst" },
-    { username: "analyst2", role: "analyst" },
     { username: "viewer1", role: "viewer" },
-    { username: "viewer2", role: "viewer" },
   ] as const;
 
   const DEFAULT_PASSWORD = "password123";

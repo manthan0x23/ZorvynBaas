@@ -4,8 +4,8 @@ import { env } from "~/env";
 import path from "path";
 import fs from "fs";
 
-const devPath = path.join(process.cwd(), "src/docs");
-const prodPath = path.join(process.cwd(), "docs");
+const devPath = path.join(process.cwd(), "src/open-api");
+const prodPath = path.join(process.cwd(), "open-api");
 
 const docsPath = fs.existsSync(devPath) ? devPath : prodPath;
 

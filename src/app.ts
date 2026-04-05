@@ -5,7 +5,6 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import { errorHandler } from "./lib/error-handler";
-import { env } from "./env";
 import morgan from "morgan";
 import { authRoutes } from "./routers/auth.routes";
 import { userRoutes } from "./routers/user.routes";
@@ -54,9 +53,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-
-app.use(globalLimiter); // a global linient rate limiter (unlike auth)
-
+app.use(globalLimiter);
 app.use("/api/users", userRoutes);
 app.use("/api/records", recordRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -69,37 +66,4 @@ app
   })
   .use(errorHandler);
 
-const server = app.listen(env.PORT, () => {
-  console.log(`Server running on PORT ${env.PORT}`);
-});
-
 export { app };
-
-const shutdown = async (signal: string) => {
-  console.log(`[SHUTDOWN] Received ${signal}`);
-
-  server.close(async (err) => {
-    if (err) {
-      console.error("[SHUTDOWN] Error closing server:", err);
-      process.exit(1);
-    }
-
-    console.log("[SHUTDOWN] HTTP server closed");
-
-    try {
-      console.log("[SHUTDOWN] Cleanup complete");
-      process.exit(0);
-    } catch (error) {
-      console.error("[SHUTDOWN] Cleanup failed:", error);
-      process.exit(1);
-    }
-  });
-
-  setTimeout(() => {
-    console.error("[SHUTDOWN] Force exiting...");
-    process.exit(1);
-  }, 10000);
-};
-
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);

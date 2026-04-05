@@ -1,4 +1,4 @@
-# fdp-acb
+# Zorvyn BaaS
 
 A production-grade financial records API with cookie-based session authentication, RBAC, and dashboard analytics.
 

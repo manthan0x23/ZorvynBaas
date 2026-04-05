@@ -42,6 +42,8 @@ Spins up a PostgreSQL container defined in `src/db/postgres/docker-compose.yml`:
 pnpm db:up
 ```
 
+> This also automatically provisions the test database referenced in `.env.test`.
+
 ### 4. Run migrations
 
 ```bash
@@ -97,6 +99,36 @@ docker-compose down
 
 ---
 
+## Testing
+
+The project includes minimal end-to-end tests written with [Vitest](https://vitest.dev/) and [Supertest](https://github.com/ladjs/supertest).
+
+### Test database setup
+
+The test suite uses a separate database configured in `.env.test`. Running `pnpm db:up` automatically provisions this test database — no extra steps required.
+
+Before each test run, the setup script [`vitest.setup.ts`](../src/__tests__/vitest.setup.ts) applies all pending migrations and seeds the three default users (`admin1`, `analyst1`, `viewer1`) into the test database. After the run, teardown truncates all tables so the database is clean for the next run.
+
+### Running tests
+
+```bash
+pnpm test
+```
+
+This compiles TypeScript and then runs the full test suite.
+
+### What's covered
+
+| Suite | What it tests |
+|-------|---------------|
+| Login (correct credentials) | Returns 200, sets an `HttpOnly`/`SameSite=Lax` session cookie, returns the user profile without `hashedPassword` |
+| Login rate limit | Triggers `429 TOO_MANY_LOGIN_ATTEMPTS` after 6 rapid failed attempts |
+| Schema validation | `POST /api/auth/register` with an invalid username returns `422 VALIDATION_ERROR` with field-level errors; `POST /api/records` with missing fields returns the same |
+| Authorization | A `viewer` role cannot create records — returns `403 FORBIDDEN` |
+| Soft delete | Create a record → delete it → fetching it by ID returns `404 NOT_FOUND` |
+
+---
+
 ## Available Scripts
 
 | Script | Description |
@@ -105,7 +137,7 @@ docker-compose down
 | `pnpm build` | Compile TypeScript to `dist/` |
 | `pnpm start` | Run compiled output |
 | `pnpm test` | Build then run tests |
-| `pnpm db:up` | Start the PostgreSQL Docker container |
+| `pnpm db:up` | Start the PostgreSQL Docker container (also provisions the test database) |
 | `pnpm db:down` | Stop PostgreSQL and wipe its data volume |
 | `pnpm db:generate` | Generate a new Drizzle migration from schema changes |
 | `pnpm db:migrate` | Apply pending migrations |

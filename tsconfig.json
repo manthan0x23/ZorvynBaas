@@ -3,7 +3,7 @@
     "target": "ES2020",
     "module": "CommonJS",
 
-    "rootDir": "./src",
+    "rootDirs": ["./src", "vitest.config.ts"],
     "outDir": "./dist",
 
     "baseUrl": ".",
@@ -19,6 +19,6 @@
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "skipLibCheck": true
   },
-  "include": ["src"],
+  "include": ["src", "vitest.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

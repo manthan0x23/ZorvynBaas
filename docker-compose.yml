@@ -13,19 +13,25 @@ services:
       - PORT=3000
     depends_on:
       - postgres
+      - migrate
     volumes:
       - ./logs:/app/logs
     command: >
       sh -c "
         echo 'Waiting for DB...';
         until nc -z postgres 5432; do sleep 2; done;
-        echo 'Running migrations...';
-        pnpm db:migrate &&
         echo 'Seeding DB...';
         pnpm db:seed &&
         echo 'Starting server...';
-        node dist/app.js
+        pnpm start
       "
+  migrate:
+    build: .
+    command: pnpm db:migrate
+    environment:
+      - DATABASE_URL=postgres://root:password@postgres:5432/zorvyn_baas
+    depends_on:
+      - postgres
 
   postgres:
     image: postgres:17

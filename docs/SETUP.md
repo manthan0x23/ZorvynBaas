@@ -74,7 +74,7 @@ Swagger UI is available at `http://localhost:3000/api/docs`.
 Builds and starts the API and PostgreSQL together. Migrations and seeding run automatically as part of the container startup.
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 The API is available at `http://localhost:3000`.
@@ -82,7 +82,7 @@ The API is available at `http://localhost:3000`.
 To stop and remove containers:
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ---

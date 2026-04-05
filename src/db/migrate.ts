@@ -2,9 +2,6 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres, { Sql } from "postgres";
 import path from "path";
-import { config } from "dotenv";
-
-config();
 
 const DB_URL = process.env.DATABASE_URL;
 
@@ -33,12 +30,3 @@ export async function migrate_db() {
     throw new Error(`Migration failed: ${error}`);
   }
 }
-
-migrate_db()
-  .then(() => {
-    console.log("✅ Migration completed successfully.");
-  })
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });

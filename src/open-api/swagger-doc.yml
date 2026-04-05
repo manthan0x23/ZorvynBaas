@@ -410,11 +410,11 @@ paths:
                 username:
                   type: string
                   minLength: 1
-                  example: alice_99
+                  example: admin1
                 password:
                   type: string
                   minLength: 1
-                  example: "Str0ngP@ss"
+                  example: "password123"
       responses:
         "200":
           description: Login successful. `session_id` cookie is set.

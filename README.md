@@ -22,7 +22,7 @@ pnpm db:up && pnpm db:migrate && pnpm db:seed && pnpm dev
 Or run everything with Docker:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 API: `http://localhost:3000`  

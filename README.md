@@ -32,28 +32,28 @@ Swagger UI: `http://localhost:3000/api/docs`
 
 ## Default Credentials
 
-| Username | Password | Role |
-|----------|----------|------|
-| `admin1` | `password123` | `admin` |
+| Username   | Password      | Role      |
+| ---------- | ------------- | --------- |
+| `admin1`   | `password123` | `admin`   |
 | `analyst1` | `password123` | `analyst` |
-| `viewer1` | `password123` | `viewer` |
+| `viewer1`  | `password123` | `viewer`  |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Runtime | Node.js ≥ 20 |
-| Language | TypeScript 6 |
-| Framework | Express 5 |
-| Database | PostgreSQL (via `pg` / `postgres`) |
-| ORM | Drizzle ORM 0.45 |
-| Validation | Zod 4 |
-| Password hashing | Argon2 |
-| Session storage | PostgreSQL (cookie-based, HttpOnly) |
-| API docs | Swagger UI + swagger-jsdoc |
-| Package manager | pnpm 10 |
+| Layer            | Technology                          |
+| ---------------- | ----------------------------------- |
+| Runtime          | Node.js ≥ 20                        |
+| Language         | TypeScript 6                        |
+| Framework        | Express 5                           |
+| Database         | PostgreSQL (via `pg` / `postgres`)  |
+| ORM              | Drizzle ORM 0.45                    |
+| Validation       | Zod 4                               |
+| Password hashing | Argon2                              |
+| Session storage  | PostgreSQL (cookie-based, HttpOnly) |
+| API docs         | Swagger UI + swagger-jsdoc          |
+| Package manager  | pnpm 10                             |
 
 ---
 
@@ -92,14 +92,36 @@ See [SETUP.md](./docs/SETUP.md) for environment configuration and [API_DOC.md](.
 
 ---
 
+## Testing
+
+The project includes minimal end-to-end tests built with [Vitest](https://vitest.dev/) and [Supertest](https://github.com/ladjs/supertest).
+
+```bash
+pnpm test
+```
+
+The global setup automatically runs migrations and seeds test users before the suite, then truncates all tables on teardown. `pnpm db:up` provisions the test database (configured in `.env.test`) alongside the main one — no extra steps needed.
+
+**Coverage:**
+
+| Suite             | What it tests                                                                                                           |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Login             | Returns 200, sets `HttpOnly`/`SameSite=Lax` session cookie, omits `hashedPassword` from response                        |
+| Rate limiting     | `429 TOO_MANY_LOGIN_ATTEMPTS` after 6 rapid failed login attempts                                                       |
+| Schema validation | Invalid username on register → `422 VALIDATION_ERROR` with field-level errors; missing fields on record creation → same |
+| Authorization     | `viewer` role cannot create records → `403 FORBIDDEN`                                                                   |
+| Soft delete       | Create → delete → fetch by ID returns `404 NOT_FOUND`                                                                   |
+
+---
+
 ## Documentation
 
-| File | Description |
-|------|-------------|
-| [API_DOC.md](./docs/API_DOC.md) | Full endpoint reference with request/response shapes |
-| [FEATURES.md](./docs/FEATURES.md) | Feature overview |
-| [SETUP.md](./docs/SETUP.md) | Installation and configuration guide |
-| `/api/docs` | Interactive Swagger UI (when server is running) |
+| File                              | Description                                          |
+| --------------------------------- | ---------------------------------------------------- |
+| [API_DOC.md](./docs/API_DOC.md)   | Full endpoint reference with request/response shapes |
+| [FEATURES.md](./docs/FEATURES.md) | Feature overview                                     |
+| [SETUP.md](./docs/SETUP.md)       | Installation and configuration guide                 |
+| `/api/docs`                       | Interactive Swagger UI (when server is running)      |
 
 ---
 

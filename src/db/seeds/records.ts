@@ -1,4 +1,4 @@
-import { recordRepo } from "~/repos/record.repo";
+import { CreateRecordInput, recordRepo } from "~/repos/record.repo";
 import { categoryRepo } from "~/repos/category.repo";
 
 function randomDateLastYear() {
@@ -33,11 +33,13 @@ export async function seedRecordsFn() {
 
   const TOTAL_RECORDS = 500;
 
+  const records: CreateRecordInput[] = [];
+
   for (let i = 0; i < TOTAL_RECORDS; i++) {
     const category =
       allCategories[Math.floor(Math.random() * allCategories.length)];
 
-    await recordRepo.create({ id: "seed" } as any, {
+    records.push({
       categoryId: category.id,
       amount: randomAmount(category.type).toString(),
       notes: `Seeded ${category.name}`,
@@ -46,6 +48,8 @@ export async function seedRecordsFn() {
       type: category.type,
     });
   }
+
+  await recordRepo.createMany({ id: "seed" } as any, records);
 
   console.log(`✅ Inserted ${TOTAL_RECORDS} records`);
 }

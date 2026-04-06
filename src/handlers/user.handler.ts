@@ -139,10 +139,12 @@ export const userHandler = {
 function cookieOptions(): CookieOptions {
   const isProd = env.NODE_ENV === "production";
 
+  console.log(isProd, "isProd cookies");
+
   return {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? "none" : "lax",
+    sameSite: "none",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 }

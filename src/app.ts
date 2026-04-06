@@ -19,6 +19,8 @@ import { env } from "./env";
 const app = express();
 
 app.use(requestTracer);
+app.set("trust proxy", 1);
+
 app
   .use(
     helmet({

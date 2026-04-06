@@ -23,27 +23,35 @@ console.log([env.BASE_URL, `http://localhost:${env.PORT}`]);
 app.use(requestTracer);
 app.set("trust proxy", 1);
 
+app.use(
+  cors({
+    origin: [
+      env.BASE_URL,
+      "https://zorvyn-baas.publicvm.com",
+      "https://www.zorvyn-baas.publicvm.com",
+      `http://localhost:${env.PORT}`,
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
+app.options("*", cors());
+
 app
   .use(
     helmet({
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          connectSrc: ["'self'", env.BASE_URL],
+          connectSrc: [
+            "'self'",
+            env.BASE_URL,
+            "https://www.zorvyn-baas.publicvm.com",
+          ],
         },
       },
-    }),
-  )
-  .use(
-    cors({
-      origin: [
-        env.BASE_URL,
-        `http://localhost:${env.PORT}`,
-        "https://www.zorvyn-baas.publicvm.com",
-      ],
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-      allowedHeaders: ["Content-Type", "Authorization"],
     }),
   )
   .use(morgan("combined"));

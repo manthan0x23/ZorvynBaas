@@ -18,6 +18,8 @@ import { env } from "./env";
 
 const app = express();
 
+console.log([env.BASE_URL, `http://localhost:${env.PORT}`]);
+
 app.use(requestTracer);
 app.set("trust proxy", 1);
 
@@ -34,7 +36,7 @@ app
   )
   .use(
     cors({
-      origin: env.BASE_URL,
+      origin: [env.BASE_URL, `http://localhost:${env.PORT}`],
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       allowedHeaders: ["Content-Type", "Authorization"],

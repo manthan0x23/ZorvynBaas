@@ -36,7 +36,7 @@ app
   )
   .use(
     cors({
-      origin: [env.BASE_URL, `http://localhost:${env.PORT}`],
+      origin: "*",
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       allowedHeaders: ["Content-Type", "Authorization"],

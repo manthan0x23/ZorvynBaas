@@ -36,7 +36,11 @@ app
   )
   .use(
     cors({
-      origin: "*",
+      origin: [
+        env.BASE_URL,
+        `http://localhost:${env.PORT}`,
+        "https://www.zorvyn-baas.publicvm.com",
+      ],
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       allowedHeaders: ["Content-Type", "Authorization"],

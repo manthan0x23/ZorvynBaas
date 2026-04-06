@@ -34,7 +34,7 @@ app
   )
   .use(
     cors({
-      origin: "*",
+      origin: env.BASE_URL,
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       allowedHeaders: ["Content-Type", "Authorization"],
@@ -58,7 +58,15 @@ app
   .use(cookieParser())
   .use(compression());
 
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: {
+      withCredentials: true,
+    },
+  }),
+);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, uptime: process.uptime() });

@@ -1,20 +1,23 @@
-import { seedCategoriesFn } from "./categories";
-import { seedRecordsFn } from "./records";
 import { seedUsers } from "./users";
+import { seedCategories } from "./categories";
+import { seedRecords } from "./records";
+import { closeDb } from "./db";
 
 async function seed() {
   console.log("🌱 Seeding database...");
 
-  await seedCategoriesFn();
   await seedUsers();
-  await seedRecordsFn();
+  await seedCategories();
+  await seedRecords();
 
-  console.log("🎉 Seeding complete");
+  console.log("\n🎉 Seeding complete");
 }
 
 seed()
+  .then(() => closeDb())
   .then(() => process.exit(0))
-  .catch((err) => {
+  .catch(async (err) => {
     console.error("❌ Seeding failed:", err);
+    await closeDb();
     process.exit(1);
   });

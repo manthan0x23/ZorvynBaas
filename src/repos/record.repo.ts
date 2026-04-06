@@ -4,6 +4,7 @@ import { eq, and, gte, lte, desc, isNull, sql } from "drizzle-orm";
 import { categoryRepo } from "./category.repo";
 import { logger } from "~/lib/logger";
 import { RequestContext } from "~/types";
+import { users } from "~/db/schema";
 
 export type RecordStatus = "pending" | "posted" | "cancelled";
 export type RecordType = "income" | "expense" | "special";
@@ -46,23 +47,11 @@ export const recordRepo = {
       .insert(financialRecords)
       .values({
         ...input,
+        createdBy: ctx.user.username,
       })
       .returning();
 
     return record;
-  },
-
-  async createMany(ctx: RequestContext, inputs: CreateRecordInput[]) {
-    logger.info(ctx, `[${ctx.id}] recordRepo.createMany (repo)`);
-
-    if (!inputs.length) return [];
-
-    const records = await db
-      .insert(financialRecords)
-      .values(inputs)
-      .returning();
-
-    return records;
   },
 
   async findById(ctx: RequestContext, id: string) {
@@ -77,6 +66,11 @@ export const recordRepo = {
         status: financialRecords.status,
         createdAt: financialRecords.createdAt,
         updatedAt: financialRecords.updatedAt,
+        createdBy: {
+          username: users.username,
+          role: users.role,
+        },
+
         category: {
           id: categories.id,
           name: categories.name,
@@ -85,6 +79,7 @@ export const recordRepo = {
       })
       .from(financialRecords)
       .innerJoin(categories, eq(financialRecords.categoryId, categories.id))
+      .innerJoin(users, eq(financialRecords.createdBy, users.id))
       .where(and(eq(financialRecords.id, id), notDeleted))
       .limit(1);
 
@@ -143,6 +138,10 @@ export const recordRepo = {
         status: financialRecords.status,
         createdAt: financialRecords.createdAt,
         updatedAt: financialRecords.updatedAt,
+        createdBy: {
+          username: users.username,
+          role: users.role,
+        },
         category: {
           id: categories.id,
           name: categories.name,
@@ -151,6 +150,7 @@ export const recordRepo = {
       })
       .from(financialRecords)
       .innerJoin(categories, eq(financialRecords.categoryId, categories.id))
+      .innerJoin(users, eq(financialRecords.createdBy, users.id))
       .where(and(...conditions))
       .orderBy(desc(financialRecords.occurredAt))
       .limit(limit)
@@ -176,7 +176,7 @@ export const recordRepo = {
 
     const [updated] = await db
       .update(financialRecords)
-      .set({ deletedAt: now, updatedAt: now })
+      .set({ deletedAt: now, updatedAt: now, deletedBy: ctx.user.id })
       .where(and(eq(financialRecords.id, id), notDeleted))
       .returning();
 

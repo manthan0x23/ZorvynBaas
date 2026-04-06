@@ -1,4 +1,4 @@
-import { migrate_db } from "../db/migrate";
+import { migrate_db } from "./migrate";
 
 migrate_db()
   .then(() => {

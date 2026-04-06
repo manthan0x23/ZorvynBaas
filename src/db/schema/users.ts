@@ -34,6 +34,7 @@ export const users = pgTable(
       .$onUpdateFn(() => new Date()),
 
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    deletedBy: varchar("deleted_by"),
 
     createdAt: timestamp("created_at").defaultNow(),
   },

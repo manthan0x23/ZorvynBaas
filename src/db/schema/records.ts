@@ -11,6 +11,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { nanoid } from "nanoid";
+import { users } from "./users";
 
 export const recordTypeEnum = pgEnum("record_type_enum", [
   "income",
@@ -65,8 +66,14 @@ export const financialRecords = pgTable(
     status: recordStatusEnum("status").notNull().default("posted"),
 
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdBy: varchar("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "no action" }),
 
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    deletedBy: varchar("deleted_by").references(() => users.id, {
+      onDelete: "no action",
+    }),
 
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()

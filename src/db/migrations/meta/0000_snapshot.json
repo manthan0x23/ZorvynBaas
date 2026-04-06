@@ -1,5 +1,5 @@
 {
-  "id": "52fb9a28-b2fc-4092-b4ae-7806085015dd",
+  "id": "a7f47cfc-190b-4f82-bc9b-ef5e22b15ad2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -103,6 +103,12 @@
         "deleted_at": {
           "name": "deleted_at",
           "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
@@ -278,9 +284,21 @@
           "notNull": false,
           "default": "now()"
         },
+        "created_by": {
+          "name": "created_by",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "deleted_at": {
           "name": "deleted_at",
           "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
@@ -346,6 +364,32 @@
           "tableTo": "categories",
           "columnsFrom": [
             "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "financial_records_created_by_users_id_fk": {
+          "name": "financial_records_created_by_users_id_fk",
+          "tableFrom": "financial_records",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "financial_records_deleted_by_users_id_fk": {
+          "name": "financial_records_deleted_by_users_id_fk",
+          "tableFrom": "financial_records",
+          "tableTo": "users",
+          "columnsFrom": [
+            "deleted_by"
           ],
           "columnsTo": [
             "id"

@@ -1,6 +1,8 @@
-import { categoryRepo } from "~/repos/category.repo";
+import { db } from "./db";
+import { categories } from "../schema/records";
 
-const seedCategories = [
+const SEED_CATEGORIES = [
+  // income
   { name: "Salary", type: "income" },
   { name: "Bonus", type: "income" },
   { name: "Interest Income", type: "income" },
@@ -8,6 +10,7 @@ const seedCategories = [
   { name: "Business Revenue", type: "income" },
   { name: "Capital Gains", type: "income" },
 
+  // expense
   { name: "Rent / Lease", type: "expense" },
   { name: "Utilities", type: "expense" },
   { name: "Groceries", type: "expense" },
@@ -24,20 +27,30 @@ const seedCategories = [
   { name: "Travel", type: "expense" },
   { name: "Entertainment", type: "expense" },
 
+  // special
   { name: "Transfer", type: "special" },
   { name: "Adjustment", type: "special" },
   { name: "Reversal", type: "special" },
   { name: "Reimbursement", type: "special" },
 ] as const;
 
-export async function seedCategoriesFn() {
-  console.log("📂 Seeding categories...");
+export async function seedCategories() {
+  console.log("\n📂 Seeding categories...");
 
-  for (const cat of seedCategories) {
-    await categoryRepo.ensure({ id: "seed" } as any, cat.name, cat.type);
+  const inserted = await db
+    .insert(categories)
+    .values(
+      SEED_CATEGORIES.map((cat) => ({
+        name: cat.name,
+        type: cat.type,
+        isSystem: true,
+      })),
+    )
+    .onConflictDoNothing()
+    .returning({ name: categories.name });
 
-    console.log(`✅ Added category: ${cat.name}`);
-  }
-
+  console.log(
+    `✅ Inserted ${inserted.length} new categories (${SEED_CATEGORIES.length - inserted.length} already existed)`,
+  );
   console.log("🎉 Categories seeded");
 }

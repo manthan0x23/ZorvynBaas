@@ -16,6 +16,7 @@ CREATE TABLE "users" (
 	"role" "user_roles_enum" DEFAULT 'viewer' NOT NULL,
 	"updated_at" timestamp DEFAULT now(),
 	"deleted_at" timestamp with time zone,
+	"deleted_by" varchar,
 	"created_at" timestamp DEFAULT now(),
 	CONSTRAINT "users_username_unique" UNIQUE("username")
 );
@@ -36,12 +37,16 @@ CREATE TABLE "financial_records" (
 	"occurred_at" timestamp with time zone NOT NULL,
 	"status" "record_status_enum" DEFAULT 'posted' NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
+	"created_by" varchar NOT NULL,
 	"deleted_at" timestamp with time zone,
+	"deleted_by" varchar,
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "financial_records" ADD CONSTRAINT "financial_records_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "financial_records" ADD CONSTRAINT "financial_records_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "financial_records" ADD CONSTRAINT "financial_records_deleted_by_users_id_fk" FOREIGN KEY ("deleted_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "user_role_idx" ON "users" USING btree ("role");--> statement-breakpoint
 CREATE INDEX "cat_type_idx" ON "categories" USING btree ("type");--> statement-breakpoint
 CREATE UNIQUE INDEX "Cat_cat_type_uniq_idx" ON "categories" USING btree ("name","type");--> statement-breakpoint

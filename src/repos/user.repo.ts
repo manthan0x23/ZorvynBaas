@@ -19,7 +19,7 @@ type UpdateUserInput = Partial<{
 
 export const userRepo = {
   async create(ctx: RequestContext, input: CreateUserInput) {
-    logger.info(ctx,`[${ctx.id}] user.create.repo `);
+    logger.info(ctx, `[${ctx.id}] user.create.repo `);
 
     const [user] = await db.insert(users).values(input).returning();
 
@@ -27,7 +27,7 @@ export const userRepo = {
   },
 
   async findById(ctx: RequestContext, id: string) {
-    logger.info(ctx,`[${ctx.id}] user.findById.repo`);
+    logger.info(ctx, `[${ctx.id}] user.findById.repo`);
 
     const [user] = await db
       .select()
@@ -39,7 +39,7 @@ export const userRepo = {
   },
 
   async findByUsername(ctx: RequestContext, username: string) {
-    logger.info(ctx,`[${ctx.id}] user.findByUsername.repo`);
+    logger.info(ctx, `[${ctx.id}] user.findByUsername.repo`);
 
     const [user] = await db
       .select()
@@ -54,7 +54,7 @@ export const userRepo = {
     ctx: RequestContext,
     filters?: { role?: UserRole; search?: string },
   ) {
-    logger.info(ctx,`[${ctx.id}] user.findAll.repo`);
+    logger.info(ctx, `[${ctx.id}] user.findAll.repo`);
 
     const conditions = [isNull(users.deletedAt)];
 
@@ -75,7 +75,7 @@ export const userRepo = {
   },
 
   async update(ctx: RequestContext, id: string, input: UpdateUserInput) {
-    logger.info(ctx,`[${ctx.id}] user.update.repo`);
+    logger.info(ctx, `[${ctx.id}] user.update.repo`);
 
     const [updated] = await db
       .update(users)
@@ -87,13 +87,13 @@ export const userRepo = {
   },
 
   async delete(ctx: RequestContext, id: string) {
-    logger.info(ctx,`[${ctx.id}] user.delete.repo`);
+    logger.info(ctx, `[${ctx.id}] user.delete.repo`);
 
     const now = new Date();
 
     const [updated] = await db
       .update(users)
-      .set({ deletedAt: now, updatedAt: now })
+      .set({ deletedAt: now, updatedAt: now, deletedBy: ctx.user.id })
       .where(eq(users.id, id))
       .returning();
 
@@ -104,7 +104,7 @@ export const userRepo = {
     ctx: RequestContext,
     username: string,
   ): Promise<boolean> {
-    logger.info(ctx,`[${ctx.id}] user.existsByUsername.repo`);
+    logger.info(ctx, `[${ctx.id}] user.existsByUsername.repo`);
 
     const [user] = await db
       .select({ id: users.id })
